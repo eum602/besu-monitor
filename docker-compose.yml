@@ -1,0 +1,67 @@
+version: "3"
+
+networks:
+  grafana:
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  app_data: {}
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.16.0
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - 9090:9090
+    network_mode: host
+    # networks:
+    #   - grafana
+
+  loki:
+    image: grafana/loki:1.4.1
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+    network_mode: host
+    # networks:
+    #   - grafana
+
+  promtail:
+    image: grafana/promtail:v1.3.0
+    volumes:
+      - app_data:/var/log
+    command: -config.file=/etc/promtail/docker-config.yaml
+    network_mode: host
+    # networks:
+    #   - grafana
+
+  grafana:
+    image: grafana/grafana:7.0.0
+    ports:
+      - 3000:3000
+    network_mode: host
+      # networks:
+    #   - grafana
+
+  # app:
+  #   build: ./app
+  #   ports:
+  #     - 8081:80
+  #   volumes:
+  #     - app_data:/var/log
+  #   networks:
+  #     - grafana
+
+  db:
+    image: grafana/tns-db:latest
+    ports:
+      - 8082:80
+    network_mode: host
+      # networks:
+    #   - grafana
